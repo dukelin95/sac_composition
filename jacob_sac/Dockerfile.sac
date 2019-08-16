@@ -1,0 +1,7 @@
+FROM rlplayground/rllab:latest
+
+# ========== Add codebase stub ==========
+RUN mkdir /root/code/sac
+
+
+ENV PYTHONPATH /root/code/sac:/root/code/inverse_rl:/root/code/SO_inverse_rl:$PYTHONPATH

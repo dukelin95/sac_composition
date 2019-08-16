@@ -1,0 +1,49 @@
+{
+  "_hidden_keys": [],
+  "algorithm_params": {
+    "base_kwargs": {
+      "epoch_length": 1000,
+      "eval_deterministic": true,
+      "eval_n_episodes": 1,
+      "eval_render": false,
+      "n_epochs": 5000.0,
+      "n_initial_exploration_steps": 10000,
+      "n_train_repeat": 1
+    },
+    "discount": 0.99,
+    "lr": 0.0003,
+    "reparameterize": true,
+    "scale_reward": 5,
+    "target_update_interval": 1,
+    "tau": 0.005
+  },
+  "domain": "ant",
+  "env_params": {},
+  "exp_name": "ant/multi-direction-2018-12-14-10-44-19-274887-PST-01",
+  "git_sha": null,
+  "policy_params": {
+    "action_prior": "uniform",
+    "reg": 0.001,
+    "reparameterize": true,
+    "type": "gaussian"
+  },
+  "prefix": "ant/multi-direction",
+  "replay_buffer_params": {
+    "max_replay_buffer_size": 1000000.0
+  },
+  "run_params": {
+    "seed": 2,
+    "snapshot_gap": 1000,
+    "snapshot_mode": "gap",
+    "sync_pkl": true
+  },
+  "sampler_params": {
+    "batch_size": 256,
+    "max_path_length": 1000,
+    "min_pool_size": 1000
+  },
+  "task": "multi-direction",
+  "value_fn_params": {
+    "layer_size": 256
+  }
+}

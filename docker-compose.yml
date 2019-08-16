@@ -1,0 +1,34 @@
+version: '2.3'
+services:
+  comp:
+    image: crl_sawyer
+    runtime: nvidia
+    environment: 
+      - "DISPLAY=$DISPLAY"
+      - "CUDA_VISIBLE_DEVICES=2"
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./mjkey/mjkey.txt:/root/.mujoco/mjkey.txt
+      - ./code/:/root/code/
+      - ./robosuite/:/root/robosuite/
+      - ./crl_code/:/root/crl_code/
+      - ./rllab/:/root/rllab/
+      - /home/owner/mujocoFiles/mujoco:/root/rllab/vendor/mujoco
+    tty: true
+    stdin_open: true
+  prim:
+    image: crl_sawyer
+    runtime: nvidia
+    environment:
+      - "DISPLAY=$DISPLAY"
+      - "CUDA_VISIBLE_DEVICES=3"
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./mjkey/mjkey.txt:/root/.mujoco/mjkey.txt
+      - ./code/:/root/code/
+      - ./robosuite/:/root/robosuite/
+      - ./jacob_sac/:/root/jacob_sac/
+      - ./rllab/:/root/rllab/
+      - /home/owner/mujocoFiles/mujoco:/root/rllab/vendor/mujoco
+    tty: true
+    stdin_open: true
