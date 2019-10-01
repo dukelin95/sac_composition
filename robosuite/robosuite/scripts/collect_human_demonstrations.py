@@ -20,6 +20,7 @@ import robosuite.utils.transform_utils as T
 from robosuite.wrappers import IKWrapper
 from robosuite.wrappers import DataCollectionWrapper
 
+import dateutil.tz
 
 def collect_human_trajectory(env, device):
     """
@@ -222,6 +223,9 @@ def gather_demonstrations_as_hdf5(directory, out_dir):
 
     f.close()
 
+def timestamp():
+    now = datetime.datetime.now(dateutil.tz.tzlocal())
+    return now.strftime('%Y-%m-%d-%H-%M-%S-%f-%Z')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -270,7 +274,8 @@ if __name__ == "__main__":
 
     # make a new timestamped directory
     t1, t2 = str(time.time()).split(".")
-    new_dir = os.path.join(args.directory, "{}_{}".format(t1, t2))
+    # new_dir = os.path.join(args.directory, "{}_{}".format(t1, t2))
+    new_dir = os.path.join(args.directory, timestamp())
     os.makedirs(new_dir)
 
     # collect demonstrations

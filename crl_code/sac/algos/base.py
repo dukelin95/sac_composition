@@ -33,7 +33,8 @@ class RLAlgorithm(Algorithm):
             eval_n_episodes=10,
             eval_deterministic=True,
             eval_render=False,
-            control_interval=1
+            control_interval=1,
+            use_demos=False,
     ):
         """
         Args:
@@ -66,7 +67,7 @@ class RLAlgorithm(Algorithm):
         self._env = None
         self._policy = None
         self._pool = None
-
+        self.use_demos = use_demos
 
     def _train(self, env, policy, initial_exploration_policy,sub_level_policies_paths, pool,g):
         """Perform RL training.
@@ -108,12 +109,16 @@ class RLAlgorithm(Algorithm):
             self._init_training(env, policy, pool)
 
             if initial_exploration_policy is None:
-                self.sampler.initialize(env, policy,sub_level_policies, pool)
+                self.sampler.initialize(env, policy,sub_level_policies, pool, g, self.use_demos)
                 initial_exploration_done = True
             else:
-                self.sampler.initialize(env, initial_exploration_policy,sub_level_policies, pool)
+                self.sampler.initialize(env, initial_exploration_policy,sub_level_policies, pool, g, self.use_demos)
                 initial_exploration_done = False
 
+            import pdb
+            pdb.set_trace()
+
+            if self.use_demos: print("Using demonstrations: {} steps".format(self.sampler.pool.demo_buffer._size))
             for epoch in gt.timed_for(range(self._n_epochs + 1),
                                       save_itrs=True, quick_print=True):
                 logger.push_prefix('Epoch #%d | ' % epoch)

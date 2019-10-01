@@ -29,9 +29,9 @@ def rollout(env, agent, max_path_length=np.inf, animated=False, speedup=1,
         o = next_o
         if animated:
             env.render()
-            # env.wrapped_env.env.viewer.viewer.add_marker(pos=env.wrapped_env.env.goal,
-            #                                                  size=np.array((0.02, 0.02, 0.02)), label='goal',
-            #                                                  rgba=[1, 0, 0, 0.5])
+            env.wrapped_env.env.viewer.viewer.add_marker(pos=env.wrapped_env.env.goal,
+                                                             size=np.array((0.02, 0.02, 0.02)), label='goal',
+                                                             rgba=[1, 0, 0, 0.5])
             # timestep = 0.05
             # time.sleep(timestep / speedup)
     if animated and not always_return_paths:

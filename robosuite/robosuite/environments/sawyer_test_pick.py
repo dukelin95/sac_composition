@@ -111,8 +111,6 @@ class SawyerPrimitivePick(SawyerEnv):
         self.table_full_size = table_full_size
         self.table_friction = table_friction
 
-        self.goal = np.array((0, 0, self.table_full_size[2] + 0.1))
-
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
@@ -177,8 +175,10 @@ class SawyerPrimitivePick(SawyerEnv):
 
         # initialize objects of interest
         cube = BoxObject(
-            size_min=[0.020, 0.020, 0.020],  # [0.015, 0.015, 0.015],
-            size_max=[0.022, 0.022, 0.022],  # [0.018, 0.018, 0.018])
+            # size_min=[0.020, 0.020, 0.020],  # [0.015, 0.015, 0.015],
+            # size_max=[0.022, 0.022, 0.022],  # [0.018, 0.018, 0.018])
+            size_min=[0.015, 0.015, 0.015],
+            size_max=[0.015, 0.015, 0.015],
             rgba=[1, 0, 0, 1],
         )
         self.mujoco_objects = OrderedDict([("cube", cube)])
@@ -212,22 +212,21 @@ class SawyerPrimitivePick(SawyerEnv):
         """
         Resets simulation internal configurations.
         """
-        super()._reset_internal()
+        super(SawyerEnv, self)._reset_internal()
 
         self.model.place_objects()
 
-
-        arm_range = [-0.1, 0.1]
         if self.random_arm_init:
             # random initialization of arm
             constant_quat = np.array([-0.01704371, -0.99972409, 0.00199679, -0.01603944])
+
+
             target_position = np.array([0.5 + np.random.uniform(self.random_arm_init[0], self.random_arm_init[1]),
                                         np.random.uniform(self.random_arm_init[0], self.random_arm_init[1]),
                                         self.table_full_size[2] + 0.15211762])
             self.controller.sync_ik_robot(self._robot_jpos_getter(), simulate=True)
             joint_list = self.controller.inverse_kinematics(target_position, constant_quat)
             init_pos = np.array(joint_list)
-
         else:
             # default robosuite init
             init_pos = np.array([-0.5538, -0.8208, 0.4155, 1.8409, -0.4955, 0.6482, 1.9628])
@@ -243,15 +242,17 @@ class SawyerPrimitivePick(SawyerEnv):
         self.sim.data.qpos[10:12] = self.sim.data.site_xpos[self.eef_site_id][:2]
 
         # decay rate (1 / (1 + decay_param * #resets))
-        decay_param = self.decay
-        chance = self.instructive * (1 / (1 + decay_param * self.instructive_counter))
-        if np.random.uniform() < chance and not self.eval_mode:
+        chance = self.instructive * (1 / (1 + self.decay * self.instructive_counter))
+        if np.random.uniform() < chance: # and not self.eval_mode:
             self.sim.data.qpos[13] = self.sim.data.site_xpos[self.eef_site_id][2]
             self.sim.data.qpos[
                 self._ref_gripper_joint_pos_indexes
             ] = np.array([-0.0, -0.0]) #np.array([-0.21021952, -0.00024167])  # gripped
 
         self.instructive_counter = self.instructive_counter + 1
+
+        cube_pos = np.array(self.sim.data.body_xpos[self.cube_body_id])
+        self.goal = cube_pos + np.array((0, 0, 0.075))
 
     def _robot_jpos_getter(self):
         return np.array([0, -1.18, 0.00, 2.18, 0.00, 0.57, 3.3161])
@@ -282,7 +283,11 @@ class SawyerPrimitivePick(SawyerEnv):
     # for goalenv wrapper
     def compute_reward(self, achieved_goal, desired_goal, info=None):
         # -1 if cube is below, 0 if cube is above
-        return -np.float32(achieved_goal[2] < desired_goal[2])
+        reward = -1.0
+        if achieved_goal[2] > desired_goal[2]:
+            reward = 100.0
+
+        return reward
 
     # for goalenv wrapper
     def get_goalenv_dict(self, obs_dict):

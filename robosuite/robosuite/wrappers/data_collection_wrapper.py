@@ -118,9 +118,10 @@ class DataCollectionWrapper(Wrapper):
             state = self.env.sim.get_state().flatten()
             self.states.append(state)
 
+            info = {}
             if isinstance(self.env, IKWrapper):
                 # add end effector actions in addition to the low-level joint actions
-                info = {}
+
                 info["joint_velocities"] = np.array(
                     self.controller.commanded_joint_velocities
                 )
@@ -132,12 +133,20 @@ class DataCollectionWrapper(Wrapper):
                     info["gripper_actuation"] = np.array(action[14:])
                     info["left_dpos"] = np.array(action[7:10])  # add in second arm info
                     info["left_dquat"] = np.array(action[10:14])
+
+                # for demonstration buffer
+                obs_dict, reward, terminal, add_info = ret
+                info["action"] = action
+                info["reward"] = np.array(reward)
+                # ["robot-state", "object-state"]
+                info["observation"] = np.concatenate([obs_dict["robot-state"], obs_dict["object-state"]])
+                info["terminal"] = np.array(terminal)
             else:
-                info = {}
                 info["joint_velocities"] = np.array(action[: self.env.mujoco_robot.dof])
                 info["gripper_actuation"] = np.array(
                     action[self.env.mujoco_robot.dof :]
                 )
+
             self.action_infos.append(info)
 
         # flush collected data to disk if necessary

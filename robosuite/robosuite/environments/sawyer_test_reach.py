@@ -25,8 +25,9 @@ class SawyerReach(SawyerEnv):
     def __init__(
         self,
         gripper_type="TwoFingerGripper",
-        lower_goal_range = [-0.2, -0.2, -0.1],
-        upper_goal_range = [0.2, 0.2, 0.2],
+        lower_goal_range = [-0.1, -0.1, -0.1],
+        upper_goal_range = [0.1, 0.1, 0.2],
+        seed=False,
         random_arm_init = None, # please pass in [low, high]
         table_full_size=(0.8, 0.8, 0.6),
         table_friction=(1., 5e-3, 1e-4),
@@ -52,7 +53,7 @@ class SawyerReach(SawyerEnv):
         Args:
             prim_axis (str): which axis is being explored
 
-            gripper_type (str): type of gripper, used to instantiate
+            gripper_type (str): type of gripper, used to instantiate￼
                 gripper models from gripper factory.
 
             table_full_size (3-tuple): x, y, and z dimensions of the table.
@@ -109,7 +110,9 @@ class SawyerReach(SawyerEnv):
         self.upper_goal_range = upper_goal_range
         self.lower_goal_range = lower_goal_range
         self.random_arm_init = random_arm_init
-        self.distance_threshold = 0.02
+        self.seed = seed
+
+        self.distance_threshold = 0.015
         # settings for table top
         self.table_full_size = table_full_size
         self.table_friction = table_friction
@@ -205,15 +208,22 @@ class SawyerReach(SawyerEnv):
         self.model.place_objects()
 
         if self.random_arm_init is not None:
+            if self.seed:
+                constant_quat = np.array([-0.01704371, -0.99972409, 0.00199679, -0.01603944])
+                target_position = np.array([0.5 + np.random.uniform(0.0, 0.0),
+                                            np.random.uniform(0.0 ,0.0),
+                                            # self.table_full_size[2] + 0.15211762])
+                                            0.8 + 0.20211762])
+            else:
             # random initialization of arm
-            constant_quat = np.array([-0.01704371, -0.99972409, 0.00199679, -0.01603944])
-            target_position = np.array([0.5 + np.random.uniform(self.random_arm_init[0], self.random_arm_init[1]),
-                                        np.random.uniform(self.random_arm_init[0], self.random_arm_init[1]),
-                                        # self.table_full_size[2] + 0.15211762])
-                                        0.8 + 0.15211762])
+                constant_quat = np.array([-0.01704371, -0.99972409, 0.00199679, -0.01603944])
+                target_position = np.array([0.5 + np.random.uniform(self.random_arm_init[0], self.random_arm_init[1]),
+                                            np.random.uniform(self.random_arm_init[0], self.random_arm_init[1]),
+                                            self.table_full_size[2] + 0.20211762 ])
             self.controller.sync_ik_robot(self._robot_jpos_getter(), simulate=True)
             joint_list = self.controller.inverse_kinematics(target_position, constant_quat)
             init_pos = np.array(joint_list)
+
 
         else:
             # default robosuite init
@@ -232,6 +242,8 @@ class SawyerReach(SawyerEnv):
         distance = np.random.uniform(self.lower_goal_range, self.upper_goal_range)
         while np.linalg.norm(distance) <= (self.distance_threshold * 1.75):
             distance = np.random.uniform(self.lower_goal_range, self.upper_goal_range)
+        if self.seed:
+            distance = np.array((0.05, -0.1, 0.1))
 
         self.goal = gripper_site_pos + distance
 
@@ -270,14 +282,13 @@ class SawyerReach(SawyerEnv):
         if self.reward_shaping: # dense
             reward = 1 - np.tanh(10 * d)
             if d <= self.distance_threshold:
-                print('wow')
                 reward = 10.0
         else: # sparse (-1 or 0)
             #reward = -np.float32(d > distance_threshold)
             if d > self.distance_threshold:
                 reward = -1.0
             else:
-                reward = 0.0
+                reward = 60.0
 
         return reward
 

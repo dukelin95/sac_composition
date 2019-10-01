@@ -4,8 +4,8 @@ import tensorflow as tf
 from sandbox.rocky.tf.policies.base import Policy
 
 # hyperparam
-SIGMA = 0.05
-MU = 0.0
+SIGMA = 0.005
+MU = 0.09
 
 class IK_Policy(Policy):
 

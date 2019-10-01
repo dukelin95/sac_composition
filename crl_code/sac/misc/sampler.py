@@ -22,7 +22,6 @@ def rollout(env, policy,sub_level_policies,initial_exploration_done, path_length
 
     t = 0
     for t in range(path_length):
-# TODO probably need to change this
         if g!=0:
             sub_level_obs =observation[:-g]
         else:
@@ -93,11 +92,14 @@ class Sampler(object):
         self.sub_level_policies = None
         self.pool = None
 
-    def initialize(self, env, policy,sub_level_policies, pool):
+    def initialize(self, env, policy,sub_level_policies, pool, g, use_demos=False):
         self.env = env
         self.policy = policy
         self.sub_level_policies = sub_level_policies
         self.pool = pool
+
+        if use_demos:
+            self.pool.add_demos(self.sub_level_policies, g)
 
     def set_policy(self, policy):
         self.policy = policy
@@ -131,7 +133,6 @@ class SimpleSampler(Sampler):
         self._current_observation = None
         self._total_samples = 0
 
-# TODO g is used here, edit appropriately?
     def sample(self,initial_exploration_done,g):
         if self._current_observation is None:
             self._current_observation = self.env.reset()
@@ -153,7 +154,8 @@ class SimpleSampler(Sampler):
         sub_level_actions=np.transpose(sub_level_actions,(1,0,2))
 
         for i in range(0,len(self.sub_level_policies)):
-            pi= np.exp(self.sub_level_policies[i].log_pis_for(sub_level_obs))
+            pi= np.exp(self.sub_level_policies[i].log_pis_for(sub_level_obs.reshape(1,-1)))
+            # pi = np.exp(self.sub_level_policies[i].log_pis_for(sub_level_obs))
             sub_level_probs.append(pi.reshape(1,-1))
         sub_level_probs=np.stack(sub_level_probs,axis=0)
         sub_level_probs=np.transpose(sub_level_probs,(1,0,2))

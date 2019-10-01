@@ -397,6 +397,13 @@ class SAC(RLAlgorithm, Serializable):
 
         Also calls the `draw` method of the plotter, if plotter defined.
         """
+        # ys = tf.stop_gradient(
+        #     self.scale_reward * self._rewards_ph +
+        #     (1 - self._terminals_ph) * self._discount * vf_next_target_t
+        # )  # N
+        #
+        # self._td_loss1_t = 0.5 * tf.reduce_mean((ys - self._qf1_t) ** 2)
+        # self._td_loss2_t = 0.5 * tf.reduce_mean((ys - self._qf2_t) ** 2)
 
         feed_dict = self._get_feed_dict(iteration, batch)
         qf1, qf2, vf, td_loss1, td_loss2 = self._sess.run(

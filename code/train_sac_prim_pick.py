@@ -10,21 +10,26 @@ from sac.value_functions import NNQFunction, NNVFunction
 from sac.misc.instrument import run_sac_experiment
 
 from robosuite.environments.sawyer_test_pick import SawyerPrimitivePick
+from robosuite.models.tasks import UniformRandomSampler
 from ik_wrapper import IKWrapper
 from rllab.envs.normalized_env import normalize
 from crl_env_wrapper import CRLWrapper
+from crl_4DOF_env_wrapper import CRL4DOFWrapper
 
 def run_experiment(param):
+    # instructive = 0.5
+    # decay = 3e-6
+    decay = 5e-4
     instructive = 0.5
-    decay = 0.3e-6
-    random_arm_init = [-0.1, 0.1]
+
+    random_arm_init = [-0.05, 0.05]
     render = False
     reward_shaping = False
-    horizon = 150
+    horizon = 250
 
     env = normalize(
-            CRLWrapper(
-                IKWrapper(
+            CRL4DOFWrapper(
+                # IKWrapper(
                     SawyerPrimitivePick(
                         instructive=instructive,
                         decay=decay,
@@ -32,14 +37,13 @@ def run_experiment(param):
                         has_renderer=render,
                         reward_shaping=reward_shaping,
                         horizon=horizon,
-
                         has_offscreen_renderer=False,
                         use_camera_obs=False,
                         use_object_obs=True,
                         control_freq=100,)
-                ,gripper=True)
+                ,use_gripper=True)
             )
-        )
+        # )
     replay_buffer_params = {
         'max_replay_buffer_size': 1e6,
     }
@@ -63,7 +67,7 @@ def run_experiment(param):
             'eval_render': False,
             'eval_n_episodes': 1,
             'eval_deterministic': True,
-            'n_epochs': 2e3
+            'n_epochs': 3e3
         },
         sampler=sampler)
 
@@ -91,7 +95,7 @@ def run_experiment(param):
         qf2=qf2,
         vf=vf,
         lr=3e-4,
-        scale_reward=20,
+        scale_reward=5,
         discount=0.99,
         tau=0.005,
         reparameterize=True,

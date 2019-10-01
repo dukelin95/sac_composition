@@ -13,17 +13,18 @@ from robosuite.environments.sawyer_test_reach import SawyerReach
 from ik_wrapper import IKWrapper
 from rllab.envs.normalized_env import normalize
 from crl_env_wrapper import CRLWrapper
+from crl_4DOF_env_wrapper import CRL4DOFWrapper
 
 import argparse
 
 
 def run_experiment(param):
-    random_arm_init = [-0.1, 0.1]
     render = False
+    random_arm_init = [-0.0001, 0.0001]
     reward_shaping = False
     horizon = 250
     env = normalize(
-        CRLWrapper(
+        CRL4DOFWrapper(
             # IKWrapper(
                 SawyerReach(
                     # playable params
@@ -31,14 +32,16 @@ def run_experiment(param):
                     has_renderer=render,
                     reward_shaping=reward_shaping,
                     horizon=horizon,
+                    lower_goal_range=[-0.05, -0.05, -0.05],
+                    upper_goal_range=[0.05, 0.05, 0.075],
 
                     # constant params
                     has_offscreen_renderer=False,
                     use_camera_obs=False,
                     use_object_obs=True,
-                    control_freq=100, )
+                    control_freq=100,)
             # )
-        )
+        , use_gripper=True)
     )
     replay_buffer_params = {
         'max_replay_buffer_size': 1e6,
@@ -63,7 +66,7 @@ def run_experiment(param):
             'eval_render': False,
             'eval_n_episodes': 1,
             'eval_deterministic': True,
-            'n_epochs': 2e3
+            'n_epochs': 4e3
         },
         sampler=sampler)
 
@@ -91,7 +94,7 @@ def run_experiment(param):
         qf2=qf2,
         vf=vf,
         lr=3e-4,
-        scale_reward=20,
+        scale_reward=5,
         discount=0.99,
         tau=0.005,
         reparameterize=True,

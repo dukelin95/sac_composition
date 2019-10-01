@@ -64,7 +64,6 @@ def convert(b1, b2):
 
 class SpaceMouse(Device):
     """A minimalistic driver class for SpaceMouse with HID library."""
-
     def __init__(self, vendor_id=9583, product_id=50735):
         """Initialize a SpaceMouse handler.
 

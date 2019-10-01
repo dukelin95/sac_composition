@@ -100,6 +100,7 @@ class GaussianPtrPolicy(NNPolicy2, Serializable):
     def build(self):
         self._observations_ph= tf.placeholder(tf.float32,(None,self._Ds),name='observations',)
         self.sub_level_actions= tf.placeholder(tf.float32,(None,None,self._Da),name='sub_level_actions',)
+        self.sub_level_entropies = tf.placeholder(tf.float32,shape=(None, None, 1),name='sub_level_entropies',)
         with tf.variable_scope(self.name, reuse=tf.AUTO_REUSE):
 
             self.lstm_fw_cell=tf.nn.rnn_cell.LSTMCell(self.n_hiddens,initializer=self.initializer)
@@ -124,7 +125,10 @@ class GaussianPtrPolicy(NNPolicy2, Serializable):
             self.sm_scores=tf.nn.softmax(self.scores/0.5,name="sm_scores") #BatchXseq_len
             self.scores_index=tf.argmax(self.sm_scores,axis=1)  
             self.one_hot=tf.one_hot(self.scores_index,tf.shape(self.sub_level_actions)[1])
+
         self._actions =tf.reduce_sum(tf.multiply(self.sub_level_actions,tf.expand_dims(self.sm_scores,2)),1)
+        self.log_pi = tf.log(tf.reduce_sum(tf.multiply(self.sub_level_entropies, tf.expand_dims(self.sm_scores, 2)), 1))
+
     @overrides
     def get_actions(self, observations,sub_level_actions):
         """Sample actions based on the observations.
@@ -168,4 +172,22 @@ class GaussianPtrPolicy(NNPolicy2, Serializable):
 
         self._is_deterministic = was_deterministic
 
+# TODO see if it works
+    def log_diagnostics(self, iteration, batch):
+        """Record diagnostic information to the logger.
 
+        Records the mean, min, max, and standard deviation of the GMM
+        means, component weights, and covariances.
+        """
+
+        sess = tf_utils.get_default_session()
+        feed = {self._observations_ph:batch["observations"],
+                self.sub_level_actions:batch["sub_level_actions"],
+                self.sub_level_entropies:batch["sub_level_probs"]}
+        log_pi = sess.run(self.log_pi, feed)
+
+
+        logger.record_tabular('log-pi-mean', np.mean(log_pi))
+        logger.record_tabular('log-pi-max', np.max(log_pi))
+        logger.record_tabular('log-pi-min', np.min(log_pi))
+        logger.record_tabular('log-pi-std', np.std(log_pi))
